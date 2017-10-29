@@ -24,7 +24,7 @@ Compiler options are read from an electron_compiler.json file in the application
 
     {
         "verifyConfig": true | false,   // Whether to verify configuration before starting build. (Default: true)
-        "archiveOutput" true | false,   // Whether to archive electron packager output for Windows and Linux. (Default: true)
+        "archiveOutput": true | false,   // Whether to archive electron packager output for Windows and Linux. (Default: true)
         "platforms": [],                // Array or platforms to compile for. Supported options: win32, linux, darwin 
         "uglifyList": [],               // Array of paths to uglify. JavaScript and CSS files are supported.
         "ignoreList": [],               // Array of files to ignore. 
