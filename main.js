@@ -1,52 +1,53 @@
 #!/usr/bin/env node
 
-var path = require("path");
-var fs = require("fs-extra");
-var util = require("util");
-var prompt = require("prompt");
-var child_process = require("child_process");
+const path = require("path");
+const fs = require("fs-extra");
+const util = require("util");
+const prompt = require("prompt");
+const child_process = require("child_process");
 
-var colors = require("colors");
-var zipFolder = require("zip-folder");
-var pkgInfo = require('pkginfo')(module);
-var packager = require("electron-packager");
-var beautify = require("js-beautify").js_beautify;
-var removeEmptyDirs = require("remove-empty-directories");
+const colors = require("colors");
+const zipFolder = require("zip-folder");
+const pkgInfo = require('pkginfo')(module);
+const builder = require("electron-builder");
+const beautify = require("js-beautify").js_beautify;
+const removeEmptyDirs = require("remove-empty-directories");
 
-var appDir = "./app/";
-var releasesDir = "./releases";
-var cachedDependsDir = "./cached_node_modules";
+const appDir = "./app/";
+const releasesDir = "./releases";
+const cachedDependsDir = "./cached_node_modules";
 
-var babelPath = path.normalize("node_modules/.bin/babel");
-var minifyPath = path.normalize("node_modules/.bin/minify");
+const babelPath = path.normalize("node_modules/.bin/babel");
+const minifyPath = path.normalize("node_modules/.bin/minify");
 
-var repoDir = "";
-var configPath = "";
-var packagePath = "";
+let repoDir = "";
+let srcDir = "";
+let configPath = "";
+let packagePath = "";
 
-var config = {};
-var packageJSON = {};
+let config = {};
+let packageJSON = {};
 
-var platforms = [];
+let platforms = [];
 
-var validPlatforms =
+const validPlatforms =
 	[
 		"win32",
 		"linux",
 		"darwin"
 	];
 
-var ignoreList = IgnoreList();
+let ignoreList = IgnoreList();
 
 function IgnoreList()
 {
-	var list = [];
+	let list = [];
 
 	function search(searchItem)
 	{
-		for (var cnt = 0; cnt < list.length; cnt++)
+		for (let cnt = 0; cnt < list.length; cnt++)
 		{
-			var item = list[cnt];
+			const item = list[cnt];
 
 			if (item === searchItem)
 				return cnt;
@@ -111,6 +112,7 @@ function logError()
 function displayWelcome()
 {
 	console.log("");
+	console.log("Welcome!!!!");
 	console.log("electron-compiler %s", module.exports.version);
 	console.log("-----------------------");
 	console.log("");
@@ -126,7 +128,7 @@ function readEnvironment()
 
 	repoDir = process.argv[2].replace("\"", "");
 
-	var stats = null;
+	let stats = null;
 
 	try
 	{
@@ -187,6 +189,8 @@ function readEnvironment()
 
 	ignoreList.set(config.ignoreList);
 
+    srcDir = config.srcDir === undefined ? repoDir : config.srcDir;
+
 	config.appName = packageJSON.productName;
 
 	if (config.appName === undefined || config.appName.length === 0)
@@ -225,13 +229,14 @@ function readEnvironment()
 
 function detectPlatforms()
 {
+	return true;
 	if (config.platforms === undefined || config.platforms.length === 0)
 	{
 		console.log("Specify at least one platform to build for.");
 		return false;
 	}
 
-	var success = true;
+	let success = true;
 
 	config.platforms.forEach(
 		function (item)
@@ -247,7 +252,7 @@ function detectPlatforms()
 				return;
 			}
 
-			var platform =
+			const platform =
 				{
 					"name": item,
 					"done": false
@@ -264,7 +269,7 @@ function dumpConfig()
 	console.log("Application: %s", config.appName);
 	console.log("Current version: %s", packageJSON.version);
 	console.log("");
-	console.log("Building for: %s", config.platforms.join(", "));
+	//console.log("Building for: %s", config.platforms.join(", "));
 
 	if (ignoreList.get().length > 0)
 		console.log("Ignoring: %s", ignoreList.get().join(", "));
@@ -316,7 +321,7 @@ function verifyConfig(callback)
 
 	console.log("");
 
-	var schema =
+	const schema =
 		{
 			"properties":
 			{
@@ -383,14 +388,19 @@ function copyRepo()
 		return true;
 	}
 
-	var options =
+	let options =
 		{
 			"filter": isItemAllowed
 		};
 
 	try
 	{
-		fs.copySync(repoDir, appDir, options);
+		console.log(repoDir);
+		console.log(appDir);
+		console.log(options);
+		fs.copySync(srcDir, appDir, options);
+		// create the package json file inside the copied dir
+		// fs.writeFileSync(appDir + 'package.json', JSON.stringify(packageJSON));
 	}
 	catch (error)
 	{
@@ -409,17 +419,21 @@ function copyRepo()
 	return true;
 }
 
+/**
+ * @description recursively uglifies a directory and its sub directories
+ * @param dirPath
+ */
 function uglifyDir(dirPath)
 {
 	try
 	{
-		var dirItems = fs.readdirSync(dirPath);
+		let dirItems = fs.readdirSync(dirPath);
 
 		dirItems.forEach(
 			function (item)
 			{
-				var fullPath = path.join(dirPath, item);
-				var stats = fs.statSync(fullPath);
+				let fullPath = path.join(dirPath, item);
+				let stats = fs.statSync(fullPath);
 
 				if (stats.isDirectory())
 				{
@@ -441,12 +455,12 @@ function uglifyFile(filePath)
 {
 	console.log("Uglifying %s...", filePath);
 
-	var options =
+	let options =
 		{
 			"stdio": "inherit"
 		};
 
-	var cmd = "";
+	let cmd = "";
 
 	switch (path.parse(filePath).ext)
 	{
@@ -480,7 +494,7 @@ function uglifyApp()
 {
 	logTitle("Uglifying source code...");
 
-	var success = true;
+	let success = true;
 
 	config.uglifyList.forEach(
 		function (item)
@@ -507,7 +521,7 @@ function isCachedDepends()
 {
 	try
 	{
-		var stats = fs.statSync(cachedDependsDir);
+		let stats = fs.statSync(cachedDependsDir);
 
 		if (!stats.isDirectory())
 			return false;
@@ -524,9 +538,9 @@ function copyCachedDepends()
 {
 	console.log("Copying cached dependencies...");
 
-	var dest = appDir + "node_modules";
+	let dest = appDir + "node_modules";
 
-	var options =
+	let options =
 		{
 			"clobber": false
 		};
@@ -545,9 +559,9 @@ function cacheDepends()
 {
 	console.log("Caching dependencies...");
 
-	var source = appDir + "node_modules";
+	let source = appDir + "node_modules";
 
-	var options =
+	let options =
 		{
 			"clobber": false
 		};
@@ -566,12 +580,12 @@ function installDepends()
 {
 	logTitle("Installing npm dependencies...");
 
-	var useCachedDepends = isCachedDepends();
+	let useCachedDepends = isCachedDepends();
 
 	if (useCachedDepends)
 		copyCachedDepends();
 
-	var options =
+	let options =
 		{
 			"cwd": appDir,
 			"stdio": "inherit"
@@ -595,7 +609,7 @@ function installDepends()
 
 function updateVersion()
 {
-	var version = packageJSON.version.split(".");
+	let version = packageJSON.version.split(".");
 
 	if (version.length < 3)
 	{
@@ -603,7 +617,7 @@ function updateVersion()
 		return false;
 	}
 
-	var minorVersion = parseInt(version[2]);
+	let minorVersion = parseInt(version[2]);
 	version[2] = ++minorVersion;
 
 	packageJSON.version = version.join(".");
@@ -612,7 +626,7 @@ function updateVersion()
 
 function isAllPlatformsReady()
 {
-	var allReady = true;
+	let allReady = true;
 
 	platforms.forEach(
 		function (platform)
@@ -641,7 +655,7 @@ function archiveOutput(platform, outputPath, callback)
 	console.log("");
 	console.log("Archiving %s output...", platform);
 
-	var archivePath = outputPath + ".zip";
+	let archivePath = outputPath + ".zip";
 
 	zipFolder(outputPath, archivePath,
 		function (error)
@@ -666,7 +680,7 @@ function runPackager(platform, callback)
 {
 	logTitle("Packaging application for %s...", platform);
 
-	var iconPath = path.join(repoDir, "icons/icon.");
+	let iconPath = path.join(repoDir, "icons/icon.");
 
 	switch (platform)
 	{
@@ -680,7 +694,7 @@ function runPackager(platform, callback)
 			break;
 	}
 
-	var options =
+	let options =
 		{
 			"dir": appDir,
 			"arch": "x64",
@@ -725,14 +739,14 @@ function savePackageJSON()
 {
 	logTitle("Updating package.json in repository...");
 
-	var options =
+	let options =
 		{
 			"indent_with_tabs": true,
 			"brace_style": "expand",
 			"end_with_newline": true
 		};
 
-	var data = beautify(JSON.stringify(packageJSON), options);
+	let data = beautify(JSON.stringify(packageJSON), options);
 
 	if (data.length === 0)
 	{
@@ -807,7 +821,8 @@ function build(callback)
 		callback();
 		return;
 	}
-
+return;
+	//TODO::change the packageJSON electron builder source dir defs and build
 	platforms.forEach(
 		function (platform)
 		{

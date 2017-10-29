@@ -1,18 +1,18 @@
 {
-  "name": "electron-compiler",
-  "version": "1.0.9",
-  "description": "Compiler for Electron projects.",
+  "name": "wm-electron-compiler",
+  "version": "2.0.0",
+  "description": "Compiler for Electron projects (using electron-builder).",
   "main": "main.js",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/andrezammit/electron-compiler.git"
+    "url": "git+https://github.com/yonatankra/electron-compiler.git"
   },
   "bugs": {
-    "url": "https://github.com/andrezammit/electron-compiler/issues"
+    "url": "https://github.com/yonatankra/electron-compiler/issues"
   },
-  "author": "André Zammit",
+  "author": "Yonatan Kra",
   "license": "ISC",
-  "homepage": "https://andrezammit.github.io/electron-compiler/",
+  "homepage": "https://yonatankra.github.io/electron-compiler/",
   "scripts": {
     "start": "node main.js"
   },
@@ -24,7 +24,7 @@
     "babel-preset-babili": "0.0.8",
     "babel-preset-latest": "^6.16.0",
     "colors": "^1.1.2",
-    "electron-packager": "^8.3.0",
+    "electron-builder": "^19.42.2",
     "fs-extra": "^1.0.0",
     "js-beautify": "^1.6.4",
     "minifier": "^0.8.0",
@@ -41,8 +41,10 @@
     "uglify",
     "minify",
     "packager",
-    "electron-packager",
+    "electron-builder",
     "obfuscator",
     "node"
-  ]
+  ],
+  "devDependencies": {
+  }
 }
